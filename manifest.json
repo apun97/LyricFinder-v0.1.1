@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "LyricFinder",
+  "version": "0.1.1",
+  "description": "Displays Lyrics for Youtube Videos",
+
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "permissions": [
+    "tabs", "http://*/*", "https://*/*"
+  ]
+}

@@ -1,15 +1,13 @@
-chrome.runtime.sendMessage({directive: "test"}, function(response) {
-  console.log("message sent from content script from test");
-});
 var url = location.href;
 if(url.substring(0,29) === "https://www.youtube.com/watch"){
-  chrome.runtime.sendMessage({directive: "got-video-id"}, function(response) {
-    console.log("message sent from content script");
+  chrome.runtime.sendMessage({directive: url}, function(response){
+    
   });
 }
 
+
 /*
-var ytApiKey = "AIzaSyBllf9AvcRCTKyJDydluqwvs_5mP_3nTxk	";
+
 
 
 console.log(url);

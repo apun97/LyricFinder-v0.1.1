@@ -1,32 +1,35 @@
-var ytApiKey = "AIzaSyBllf9AvcRCTKyJDydluqwvs_5mP_3nTxk";
+var ytApiKey = //Insert YouTube API developer Key here;
 var youtubeApiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=";
 var videoId;
 var videoTitle;
 
 var geniusSearchUrl="https://api.genius.com/search?q=";
-var geniusAccessToken = "whTXJG08rGV-pvo65MGB4IS3zK4Hf-MsQUM0up1Lzdm-Rn33qrE1ffhmwSwt2xyw";
-
-var resultsLength;
-
-var obj;
+var geniusAccessToken = //Insert Genius.com API Access Token here;
+var resultsLength;    //Number of results returned
+var parsedResponse;   //Parsed version of response from Genius.com
 
 
+/**
+Gets url from content.js
+Gets title of video if youtube,
+else notifies user of incompatibility
+*/
 chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
     var url = tabs[0].url;
     if(url.substring(0,32) === "https://www.youtube.com/watch?v="){
       videoId = url.substring(32);
-      document.getElementById("run").disabled = false;
+      getTitle();
+    }
+    else{
+      $("#content").css("width","200px");
+      $("#content").html("Website not supported.<br>Please navigate to a YouTube video to continue.");
     }
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-    var runButton = document.getElementById('run')
-    runButton.addEventListener('click', getTitle);
-})
-
-
+/**
+GETS video title from given videoId in url
+*/
 function getTitle(){
-  $("#run").hide();
   var youtubeApiReqUrl = youtubeApiUrl  + videoId + "&key=" + ytApiKey;
   var xhttp = new XMLHttpRequest();
 
@@ -35,8 +38,8 @@ function getTitle(){
       videoTitle = xhttp.responseText;
       var obj = JSON.parse(videoTitle);
       videoTitle = obj.items[0].snippet.title;
-      var yeet = getSongAndArtist(videoTitle);
-      searchGenius(yeet);
+      var songAndArtist = getSongAndArtist(videoTitle);
+      searchGenius(songAndArtist);
     }
   }
   xhttp.open("GET",youtubeApiReqUrl,true);
@@ -48,7 +51,7 @@ function getTitle(){
 Splits the Youtube Video Title into an artist and song title that is searchable
 Removes any extraneous substrings
 @param {string}
-
+@return
 */
 function getSongAndArtist(vidTitle){
 
@@ -77,8 +80,6 @@ function getSongAndArtist(vidTitle){
     song = song.replace(/ft\..*/g,"");            //... ft. ...
     song = song.replace(/feat\..*/g,"");          //... feat. ...
     song = song.replace(/(f|F)eaturing.*/g,"");   //... featuring ....
-
-    console.log(artist+" "+song);
     return artist+song;
   }
   else{
@@ -90,24 +91,27 @@ function getSongAndArtist(vidTitle){
     vidTitle = vidTitle.replace(/ft\..*/g,"");            //... ft. ...
     vidTitle = vidTitle.replace(/feat\..*/g,"");          //... feat. ...
     vidTitle = vidTitle.replace(/(f|F)eaturing.*/g,"");   //... featuring ....
-    console.log(vidTitle);
     return vidTitle;
   }
 
 }
 
+/**
+Call search function from Genius.com with given title
+On success, calls function to display all the returned results
+@param string
+*/
 function searchGenius(title){
-  var query = title.replace(/\s/g,"%20");
+  var query = title.replace(/\s/g,"%20");   //Replace all spaces with %20
   var geniusReqUrl = geniusSearchUrl + query;
   var xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function(){
     if(xhttp.readyState == XMLHttpRequest.DONE){
       var response = xhttp.responseText;
-      obj = JSON.parse(response);
-      response = obj.meta.status;
-      resultsLength = obj.response.hits.length;
-      console.log(resultsLength);
+      parsedResponse = JSON.parse(response);
+      response = parsedResponse.meta.status;
+      resultsLength = parsedResponse.response.hits.length;
       displayResults();
     }
   }
@@ -116,30 +120,39 @@ function searchGenius(title){
   xhttp.send();
 }
 
+/**
+Displays reusults depending on returned info
+If 0 results return, inform user no results Found
+If 1 result returned, display the lyrics of returned songAndArtist
+Else, display all search results
+*/
 function displayResults(){
   if(resultsLength == 0){
-    document.getElementById("content").innerHTML = "<p>No Results Found</p>";
+    $("#content").css("width","200px");
+    $("#content").html("<div class=\"container\"><p class=\"text-center\">No Results Found<p></div>");
   }
-  else if(resultsLength >1){
-
+  else if(resultsLength > 1){
+    var results = "<div class=\"row\"><h3 class=\"text-center\">Results</h3></div>";
     var i;
-    var results = "";
     for(i=0;i<resultsLength;i++){
-      var title = obj.response.hits[i].result.full_title;
-      console.log(title);
-      results += "<p type=\"button\" class=\"result\" id="+i+">"+title+"</p><br>";
+      var title = parsedResponse.response.hits[i].result.full_title;
+      results += "<button type=\"button\" class=\"btn btn-secondary btn-block result\" id="+i+">"+title+"</button><br>";
     }
     $("#content").html(results);
     $(".result").on("click",function(){
       var resultId = $(this).attr("id");
-      displayLyrics(obj.response.hits[resultId].result.path);
+      displayLyrics(parsedResponse.response.hits[resultId].result.path);
     });
   }
-  else{
-    displayLyrics(obj.response.hits[0].result.path);
+  else{   //1 result displayed
+    displayLyrics(parsedResponse.response.hits[0].result.path);
   }
 }
 
+/**
+Displays lyrics based on given path
+@param string
+*/
 function displayLyrics(path){
   var fullPath = "https://genius.com"+path;
 
@@ -149,18 +162,20 @@ function displayLyrics(path){
     dataType: 'text',
     success: function(data){
       var str = findLyrics(data);
-      var backButton = "<button type=\"button\" class=\"back\">Back to Results</button>";
+      var backButton = "<button type=\"button\" class=\"btn btn-block back \">Back to Results</button>";
       var br = "<br>";
-      while(str.indexOf("<a") != -1){
+      while(str.indexOf("<a") != -1){   //Remove all the <a></a> tags, used for annotations
         var indexOfA = str.indexOf("<a");
         var toBeReplaced = str.substring(indexOfA,str.indexOf("\">",indexOfA)+2);
         str = str.replace(toBeReplaced,"");
         str = str.replace("</a>","");
       }
 
-      str = backButton+str+br+br;
+      str = br+backButton+br+str+br;
+      $("#content").css("width","325px");
       $("#content").html(str);
       $(".back").on("click",function(){
+        $("#content").css("width","");
         displayResults();
       });
 
@@ -172,12 +187,11 @@ function displayLyrics(path){
   });
 }
 
-
-function replaceAll(str, find, replace) {
-    return str.replace(new RegExp(find, 'g'), replace);
-}
-
-
+/**
+Parses through response from song page on Genius to look for lyric tags
+@param string
+@return string
+*/
 function findLyrics(data){
   var lyrics = data.substring(data.indexOf("<div class=\"lyrics\">")+20);
   lyrics = lyrics.substring(0, lyrics.indexOf("</div>"));

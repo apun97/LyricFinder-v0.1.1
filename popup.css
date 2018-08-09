@@ -1,8 +1,8 @@
 /*Modified from loader example on w3schools*/
 .spinner {
     border: 10px solid #f3f3f3; /* Light grey */
-    border-top: 10px solid red;
-    border-bottom: 10px solid red;
+    border-top: 10px solid #a4a5a1;
+    border-bottom: 10px solid #a4a5a1;
     border-radius: 50%;
     width: 50px;
     height: 50px;
@@ -12,4 +12,14 @@
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+#searchBox{
+  width: 200px;
+}
+
+.button-col{
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

@@ -1,12 +1,14 @@
-var ytApiKey = "";
+var ytApiKey = "AIzaSyBllf9AvcRCTKyJDydluqwvs_5mP_3nTxk";
 var youtubeApiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=";
 var videoId;
 var videoTitle;
 
 var geniusSearchUrl="https://api.genius.com/search?q=";
-var geniusAccessToken = "";
+var geniusAccessToken = "whTXJG08rGV-pvo65MGB4IS3zK4Hf-MsQUM0up1Lzdm-Rn33qrE1ffhmwSwt2xyw";
 var resultsLength;    //Number of results returned
 var parsedResponse;   //Parsed version of response from Genius.com
+
+var submitButtonHtml = "<form id=\"search\"><br><div><label for=\"searchBox\">Search</label><input type=\"text\" class=\"form-control\" id=\"searchBox\"></input></div><br><button id=\"hitSearch\" type=\"submit\" class=\"btn btn-secondary\">Submit</button><br><br></form>";
 
 
 /**
@@ -21,31 +23,10 @@ chrome.tabs.query({'active': true, 'currentWindow': true}, function (tabs) {
       getTitle(null);
     }
     else{
-      var submitButtonHtml = "";
-      submitButtonHtml += "<form id=\"search\">";
-      submitButtonHtml += "<br>";
-      submitButtonHtml += "<div>";
-      submitButtonHtml += "<label for=\"searchBox\">Search</label>";
-      submitButtonHtml += "<input type=\"text\" id=\"searchBox\"></input>";
-      submitButtonHtml += "</div>";
-      submitButtonHtml += "<br>";
-      submitButtonHtml += "<button id=\"hitSearch\" type=\"submit\" class=\"btn btn-primary\">Submit</button>";
-      submitButtonHtml += "<br>";
-      submitButtonHtml += "<br>";
-      submitButtonHtml += "</form>";
-      $("#content").html(submitButtonHtml);
-      $("#search").submit(function(event){
-        var title = $("#searchBox").val();
-        getTitle(title);
-        event.preventDefault();
-      });
+      displaySearchBar();
     }
 });
 
-function inputSearch(){
-  var title = $("#searchBox").val();
-  getTitle(title);
-}
 
 /**
 GETS video title from given videoId in url if string passed in is null,
@@ -161,11 +142,12 @@ Else, display all search results
 */
 function displayResults(){
   if(resultsLength == 0){
-    $("#content").css("width","200px");
-    $("#content").html("<div class=\"container\"><p class=\"text-center\">No Results Found<p></div>");
+    $("#content").html("<br<div class=\"container\"><p class=\"text-center\">No Results Found<p></div><div class=\"row\"><hr><button type=\"button\" class=\"btn btn-light btn-sm btn-block\" id=\"clickSearch\">Search</button></div>");
+    $("#clickSearch").on("click",displaySearchBar);
   }
   else if(resultsLength > 1){
-    var results = "<div class=\"row\"><h3 class=\"text-center\">Results</h3></div>";
+    var results = "<br><div class=\"row\"><div class=\"col-1 button-col\"><button type=\"button\" class=\"btn btn-light btn-sm\" id=\"clickSearch\">Search</button></div></div><hr>";
+    results += "<div class=\"row\"><h3 class=\"text-center\">Results</h3></div>";
     var i;
     for(i=0;i<resultsLength;i++){
       var title = parsedResponse.response.hits[i].result.full_title;
@@ -176,6 +158,7 @@ function displayResults(){
       var resultId = $(this).attr("id");
       displayLyrics(parsedResponse.response.hits[resultId].result.path);
     });
+    $("#clickSearch").on("click",displaySearchBar);
   }
   else{   //1 result displayed
     displayLyrics(parsedResponse.response.hits[0].result.path);
@@ -229,4 +212,16 @@ function findLyrics(data){
   var lyrics = data.substring(data.indexOf("<div class=\"lyrics\">")+20);
   lyrics = lyrics.substring(0, lyrics.indexOf("</div>"));
   return lyrics;
+}
+
+/**
+Displays Search Bar
+*/
+function displaySearchBar(){
+  $("#content").html(submitButtonHtml);
+  $("#search").submit(function(event){
+    var title = $("#searchBox").val();
+    getTitle(title);
+    event.preventDefault();
+  });
 }

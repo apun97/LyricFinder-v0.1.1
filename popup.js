@@ -1,10 +1,10 @@
-var ytApiKey = //Insert YouTube API developer Key here;
+var ytApiKey = "";
 var youtubeApiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=";
 var videoId;
 var videoTitle;
 
 var geniusSearchUrl="https://api.genius.com/search?q=";
-var geniusAccessToken = //Insert Genius.com API Access Token here;
+var geniusAccessToken = "";
 var resultsLength;    //Number of results returned
 var parsedResponse;   //Parsed version of response from Genius.com
 
@@ -14,37 +14,68 @@ Gets url from content.js
 Gets title of video if youtube,
 else notifies user of incompatibility
 */
-chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+chrome.tabs.query({'active': true, 'currentWindow': true}, function (tabs) {
     var url = tabs[0].url;
     if(url.substring(0,32) === "https://www.youtube.com/watch?v="){
       videoId = url.substring(32);
-      getTitle();
+      getTitle(null);
     }
     else{
-      $("#content").css("width","200px");
-      $("#content").html("Website not supported.<br>Please navigate to a YouTube video to continue.");
+      var submitButtonHtml = "";
+      submitButtonHtml += "<form id=\"search\">";
+      submitButtonHtml += "<br>";
+      submitButtonHtml += "<div>";
+      submitButtonHtml += "<label for=\"searchBox\">Search</label>";
+      submitButtonHtml += "<input type=\"text\" id=\"searchBox\"></input>";
+      submitButtonHtml += "</div>";
+      submitButtonHtml += "<br>";
+      submitButtonHtml += "<button id=\"hitSearch\" type=\"submit\" class=\"btn btn-primary\">Submit</button>";
+      submitButtonHtml += "<br>";
+      submitButtonHtml += "<br>";
+      submitButtonHtml += "</form>";
+      $("#content").html(submitButtonHtml);
+      $("#search").submit(function(event){
+        var title = $("#searchBox").val();
+        getTitle(title);
+        event.preventDefault();
+      });
     }
 });
 
+function inputSearch(){
+  var title = $("#searchBox").val();
+  getTitle(title);
+}
+
 /**
-GETS video title from given videoId in url
+GETS video title from given videoId in url if string passed in is null,
+else searches
+@param string
 */
-function getTitle(){
+function getTitle(inputTitle){
   var youtubeApiReqUrl = youtubeApiUrl  + videoId + "&key=" + ytApiKey;
-  var xhttp = new XMLHttpRequest();
 
-  xhttp.onreadystatechange = function(){
-    if(xhttp.readyState == XMLHttpRequest.DONE){
-      videoTitle = xhttp.responseText;
-      var obj = JSON.parse(videoTitle);
-      videoTitle = obj.items[0].snippet.title;
-      var songAndArtist = getSongAndArtist(videoTitle);
-      searchGenius(songAndArtist);
-    }
+  if(inputTitle == null){
+    $.ajax({
+      type: "GET",
+      url: youtubeApiReqUrl,
+      dataType: "text",
+      success: function(data){
+        videoTitle = data;
+        var obj = JSON.parse(videoTitle);
+        videoTitle = obj.items[0].snippet.title;
+        var songAndArtist = getSongAndArtist(videoTitle);
+        searchGenius(songAndArtist);
+      },
+      error: function(xhr, ajaxOptions, thrownError){
+        console.log(xhr.status);
+        console.log(thrownError);
+      }
+    });
   }
-  xhttp.open("GET",youtubeApiReqUrl,true);
-  xhttp.send();
-
+  else{
+    searchGenius(inputTitle);
+  }
 }
 
 /**
@@ -104,20 +135,22 @@ On success, calls function to display all the returned results
 function searchGenius(title){
   var query = title.replace(/\s/g,"%20");   //Replace all spaces with %20
   var geniusReqUrl = geniusSearchUrl + query;
-  var xhttp = new XMLHttpRequest();
 
-  xhttp.onreadystatechange = function(){
-    if(xhttp.readyState == XMLHttpRequest.DONE){
-      var response = xhttp.responseText;
-      parsedResponse = JSON.parse(response);
+  $.ajax({
+    url: geniusReqUrl,
+    type: "GET",
+    beforeSend: function(xhr){xhr.setRequestHeader("Authorization","Bearer "+geniusAccessToken);},
+    success: function(data){
+      parsedResponse = data;
       response = parsedResponse.meta.status;
       resultsLength = parsedResponse.response.hits.length;
       displayResults();
+    },
+    error: function(xhr, ajaxOptions, thrownError){
+      console.log(xhr.status);
+      console.log(thrownError);
     }
-  }
-  xhttp.open("GET",geniusReqUrl,true);
-  xhttp.setRequestHeader("Authorization","Bearer "+geniusAccessToken);
-  xhttp.send();
+  })
 }
 
 /**

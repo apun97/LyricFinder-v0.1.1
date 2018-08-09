@@ -1,10 +1,10 @@
-var ytApiKey = "AIzaSyBllf9AvcRCTKyJDydluqwvs_5mP_3nTxk";
+var ytApiKey = "";
 var youtubeApiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=";
 var videoId;
 var videoTitle;
 
 var geniusSearchUrl="https://api.genius.com/search?q=";
-var geniusAccessToken = "whTXJG08rGV-pvo65MGB4IS3zK4Hf-MsQUM0up1Lzdm-Rn33qrE1ffhmwSwt2xyw";
+var geniusAccessToken = "";
 var resultsLength;    //Number of results returned
 var parsedResponse;   //Parsed version of response from Genius.com
 

@@ -1,14 +1,13 @@
-var ytApiKey = "";
+var ytApiKey = ""; //YT key goes here
 var youtubeApiUrl = "https://www.googleapis.com/youtube/v3/videos?part=snippet&id=";
 var videoId;
 var videoTitle;
 
 var geniusSearchUrl="https://api.genius.com/search?q=";
-var geniusAccessToken = "";
+var geniusAccessToken = ""; //Genius key goes here
 var resultsLength;    //Number of results returned
 var parsedResponse;   //Parsed version of response from Genius.com
 
-var submitButtonHtml = "<form id=\"search\"><br><div><label for=\"searchBox\">Search</label><input type=\"text\" class=\"form-control\" id=\"searchBox\"></input></div><br><button id=\"hitSearch\" type=\"submit\" class=\"btn btn-secondary\">Submit</button><br><br></form>";
 
 
 /**
@@ -146,12 +145,14 @@ function displayResults(){
     $("#clickSearch").on("click",displaySearchBar);
   }
   else if(resultsLength > 1){
-    var results = "<br><div class=\"row\"><div class=\"col-1 button-col\"><button type=\"button\" class=\"btn btn-light btn-sm\" id=\"clickSearch\">Search</button></div></div><hr>";
-    results += "<div class=\"row\"><h3 class=\"text-center\">Results</h3></div>";
+    var results = "<br><button type=\"button\" class=\"btn btn-light btn-block\" id=\"clickSearch\">Search</button><hr>";
+    results += "<h3 class=\"text-center\">Results</h3>"; //
     var i;
     for(i=0;i<resultsLength;i++){
       var title = parsedResponse.response.hits[i].result.full_title;
-      results += "<button type=\"button\" class=\"btn btn-secondary btn-block result\" id="+i+">"+title+"</button><br>";
+      if(title.length>50)
+        title = title.substring(0,50)+"...";
+      results += "<button type=\"button\" class=\"btn btn-light btn-block result\" id="+i+">"+title+"</button><br>";
     }
     $("#content").html(results);
     $(".result").on("click",function(){
@@ -178,7 +179,7 @@ function displayLyrics(path){
     dataType: 'text',
     success: function(data){
       var str = findLyrics(data);
-      var backButton = "<button type=\"button\" class=\"btn btn-block back \">Back to Results</button>";
+      var backButton = "<button type=\"button\" class=\"btn btn-block btn-light back \">Back to Results</button>";
       var br = "<br>";
       while(str.indexOf("<a") != -1){   //Remove all the <a></a> tags, used for annotations
         var indexOfA = str.indexOf("<a");
@@ -218,6 +219,8 @@ function findLyrics(data){
 Displays Search Bar
 */
 function displaySearchBar(){
+  var submitButtonHtml = "<form id=\"search\"><br><div><label for=\"searchBox\">Search</label><input type=\"text\" class=\"form-control\" id=\"searchBox\"></input></div><br><button id=\"hitSearch\" type=\"submit\" class=\"btn btn-light\">Submit</button><br><br></form>";
+
   $("#content").html(submitButtonHtml);
   $("#search").submit(function(event){
     var title = $("#searchBox").val();

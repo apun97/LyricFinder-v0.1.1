@@ -10,7 +10,7 @@
   },
 
   "background": {
-    "scripts": ["jquery-3.3.1.min.js"]
+    "scripts": ["jquery-3.3.1.min.js", "bootstrap.min.js"]
   },
 
   "permissions": [
